@@ -626,12 +626,30 @@ function submitResults(){
     return;
   }
 
-  fetch(SCRIPT_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: {'Content-Type': 'text/plain'},
-    body: JSON.stringify(payload)
-  }).then(()=>{
+  // hidden form + iframe 방식 (CORS 우회)
+  const iframe = document.createElement('iframe');
+  iframe.name = 'submitFrame_' + Date.now();
+  iframe.style.display = 'none';
+  document.body.appendChild(iframe);
+
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = SCRIPT_URL;
+  form.target = iframe.name;
+
+  const input = document.createElement('input');
+  input.type = 'hidden';
+  input.name = 'data';
+  input.value = JSON.stringify(payload);
+  form.appendChild(input);
+
+  document.body.appendChild(form);
+  form.submit();
+  document.body.removeChild(form);
+
+  // 제출 후 3초 대기 (응답을 직접 읽을 수 없으므로)
+  setTimeout(()=>{
+    document.body.removeChild(iframe);
     document.getElementById('modalBody').innerHTML = `
       <div class="submit-success">
         <div class="icon">✅</div>
@@ -639,16 +657,7 @@ function submitResults(){
         <div class="sub">${correctCount}/${items.length} 정답 (${payload.정답률})</div>
       </div>`;
     btn.style.display = 'none';
-  }).catch(err=>{
-    document.getElementById('modalBody').innerHTML = `
-      <div class="submit-error">
-        <div class="icon">❌</div>
-        <div class="msg">제출 실패</div>
-        <div class="sub">네트워크 연결을 확인해주세요.<br>${err.message||''}</div>
-      </div>`;
-    btn.textContent = '다시 시도';
-    btn.disabled = false;
-  });
+  }, 3000);
 }
 
 function closeModal(e){
