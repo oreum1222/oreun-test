@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>[오름] 국어 · 음운변동 쪽지시험</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@600;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg-deep:#0a0e0a;--bg-card:#111a11;--bg-input:#0d150d;--border-row:rgba(255,255,255,.2);--border-outer:rgba(255,255,255,.25);--green-brand:#4a5a3a;--green-accent:#6b8f5e;--green-light:#8aad7a;--green-bright:#4ade80;--gold:#c9a84c;--gold-dim:#a08530;--text-primary:#ece8e0;--text-secondary:#c4bfb4;--text-muted:#928d82;--correct:#22c55e;--wrong:#ef4444}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg-deep);color:var(--text-primary);font-family:'Noto Sans KR',sans-serif;word-break:keep-all;min-height:100vh;line-height:1.6}
+.header{position:sticky;top:0;z-index:100;background:linear-gradient(180deg,var(--bg-deep) 0%,rgba(10,14,10,.97) 100%);border-bottom:1px solid var(--border-outer);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(12px)}
+.header-left{display:flex;align-items:center;gap:14px}
+.logo{font-family:'Noto Serif KR',serif;font-weight:900;font-size:18px;color:var(--gold);letter-spacing:-.5px}
+.logo span{color:var(--text-muted);font-weight:600;font-size:13px;margin-left:6px}
+.header-subtitle{font-size:13px;color:var(--text-muted);border-left:1px solid var(--border-outer);padding-left:14px}
+.header-right{display:flex;align-items:center;gap:16px}
+.score-display{font-size:13px;color:var(--text-secondary)}
+.score-display strong{color:var(--gold);font-size:16px;font-weight:700}
+.progress-ring{width:42px;height:42px}
+.progress-ring circle{fill:none;stroke-width:3.5}
+.progress-ring .bg{stroke:rgba(255,255,255,.1)}
+.progress-ring .fg{stroke:var(--green-bright);stroke-linecap:round;transition:stroke-dashoffset .4s ease;transform:rotate(-90deg);transform-origin:center}
+.progress-pct{font-size:10px;font-weight:700;fill:var(--text-secondary)}
+.name-bar{display:flex;align-items:center;gap:10px;padding:10px 20px;background:rgba(74,90,58,.08);border-bottom:1px solid var(--border-row);font-size:13px;color:var(--text-muted);flex-wrap:wrap}
+.name-input{background:var(--bg-input);border:1px solid rgba(255,255,255,.15);border-radius:5px;padding:5px 10px;color:var(--text-primary);font-size:13px;font-family:inherit;outline:none;width:120px}
+.name-input:focus{border-color:var(--gold-dim)}
+.tabs{display:flex;gap:0;padding:0 20px;border-bottom:1px solid var(--border-outer);background:rgba(17,26,17,.6);overflow-x:auto}
+.tab{padding:12px 24px;font-size:14px;font-weight:500;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;user-select:none}
+.tab:hover{color:var(--text-secondary)}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold);font-weight:700}
+.controls{display:flex;gap:10px;padding:14px 20px;flex-wrap:wrap;align-items:center}
+.btn{padding:8px 18px;border:1px solid var(--border-outer);border-radius:6px;background:var(--bg-card);color:var(--text-secondary);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;font-family:inherit}
+.btn:hover{border-color:var(--gold-dim);color:var(--gold)}
+.btn.primary{background:var(--green-brand);border-color:var(--green-accent);color:var(--text-primary)}
+.btn.primary:hover{background:var(--green-accent)}
+.btn.danger{border-color:rgba(239,68,68,.3)}
+.btn.danger:hover{border-color:var(--wrong);color:var(--wrong)}
+.page{display:none;padding:16px 20px 80px}
+.page.active{display:block}
+.quiz-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:900px){.quiz-grid{grid-template-columns:1fr}}
+.quiz-item{background:var(--bg-card);border:1px solid var(--border-outer);border-radius:10px;overflow:hidden;transition:border-color .2s}
+.quiz-item.answered-correct{border-color:rgba(34,197,94,.35)}
+.quiz-item.answered-wrong{border-color:rgba(239,68,68,.35)}
+.quiz-item.example{border-color:rgba(201,168,76,.25);background:rgba(17,26,17,.8)}
+.quiz-item.example .item-header{background:rgba(201,168,76,.08)}
+.quiz-item.trap{border-color:rgba(239,68,68,.15)}
+.quiz-item.trap .item-header{background:rgba(239,68,68,.06)}
+.item-header{display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(74,90,58,.12);border-bottom:1px solid var(--border-row)}
+.item-num{font-size:11px;font-weight:700;color:var(--gold-dim);background:rgba(201,168,76,.1);padding:2px 8px;border-radius:4px;flex-shrink:0}
+.item-num.trap-num{color:var(--wrong);background:rgba(239,68,68,.1)}
+.item-표기{font-family:'Noto Serif KR',serif;font-size:18px;font-weight:700;color:var(--text-primary);letter-spacing:1px;flex:1}
+.item-status{font-size:16px;opacity:0;transition:opacity .3s;flex-shrink:0}
+.item-status.show{opacity:1}
+.item-body{padding:12px 14px}
+.field-section{margin-bottom:12px}
+.field-section:last-child{margin-bottom:0}
+.field-label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.step-row{display:flex;align-items:center;gap:0;flex-wrap:wrap;row-gap:6px}
+.step-input{width:100px;background:var(--bg-input);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:7px 6px;color:var(--text-primary);font-size:14px;font-family:inherit;outline:none;transition:border-color .2s;text-align:center}
+.step-input:focus{border-color:var(--gold-dim)}
+.step-input.correct-input{border-color:var(--correct);background:rgba(34,197,94,.06);color:var(--correct)}
+.step-input.wrong-input{border-color:var(--wrong);background:rgba(239,68,68,.06);color:var(--wrong)}
+.step-input.revealed{border-color:var(--green-accent);background:rgba(107,143,94,.08);color:var(--green-light)}
+.step-input:disabled{opacity:.8;cursor:default}
+.step-arrow{color:var(--text-muted);font-size:15px;padding:0 5px;flex-shrink:0;user-select:none}
+.step-origin{color:var(--gold);font-size:14px;font-weight:600;margin-right:2px;flex-shrink:0}
+.rule-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;row-gap:6px}
+.rule-slot{display:flex;align-items:center;gap:4px}
+.rule-num{font-size:10px;font-weight:700;color:var(--gold-dim);background:rgba(201,168,76,.12);width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rule-input{width:130px;background:var(--bg-input);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:7px 8px;color:var(--text-primary);font-size:13px;font-family:inherit;outline:none;transition:border-color .2s}
+.rule-input:focus{border-color:var(--gold-dim)}
+.rule-input.correct-input{border-color:var(--correct);background:rgba(34,197,94,.06);color:var(--correct)}
+.rule-input.wrong-input{border-color:var(--wrong);background:rgba(239,68,68,.06);color:var(--wrong)}
+.rule-input.revealed{border-color:var(--green-accent);background:rgba(107,143,94,.08);color:var(--green-light)}
+.rule-input:disabled{opacity:.8;cursor:default}
+.ex-step{font-size:14px;color:var(--gold);font-weight:500;padding:4px 0}
+.ex-rule{font-size:13px;color:var(--gold);font-weight:500;padding:4px 0;display:flex;gap:10px;flex-wrap:wrap}
+.ex-rule-chip{background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);border-radius:5px;padding:3px 10px;font-size:12px;display:flex;align-items:center;gap:5px}
+.ex-rule-chip .rn{font-size:10px;font-weight:700;color:var(--gold-dim);background:rgba(201,168,76,.15);width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.trap-note{font-size:12px;color:var(--wrong);padding:6px 0;opacity:.8}
+.item-actions{padding:8px 14px 12px;display:flex;gap:8px;flex-wrap:wrap}
+.item-btn{padding:6px 12px;border:1px solid var(--border-outer);border-radius:5px;background:transparent;color:var(--text-muted);font-size:12px;cursor:pointer;font-family:inherit;transition:all .2s}
+.item-btn:hover{color:var(--text-secondary);border-color:rgba(255,255,255,.4)}
+.item-btn.active-o{border-color:var(--correct)!important;color:var(--correct)!important;background:rgba(34,197,94,.06)}
+.item-btn.active-x{border-color:var(--wrong)!important;color:var(--wrong)!important;background:rgba(239,68,68,.06)}
+.footer{padding:30px 20px;text-align:center}
+
+/* SUBMIT BUTTON */
+.submit-btn{margin-left:auto;background:rgba(201,168,76,.1)!important;border-color:rgba(201,168,76,.3)!important;color:var(--gold)!important}
+.submit-btn:hover{background:rgba(201,168,76,.2)!important;border-color:var(--gold)!important}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);justify-content:center;align-items:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg-card);border:1px solid var(--border-outer);border-radius:14px;width:100%;max-width:560px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border-row)}
+.modal-title{font-family:'Noto Serif KR',serif;font-size:16px;font-weight:700;color:var(--gold)}
+.modal-close{background:none;border:none;color:var(--text-muted);font-size:22px;cursor:pointer;padding:0 4px;line-height:1}
+.modal-close:hover{color:var(--text-primary)}
+.modal-body{padding:20px;overflow-y:auto;flex:1}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border-row);display:flex;gap:10px;justify-content:flex-end}
+
+.submit-summary{margin-bottom:16px}
+.submit-summary h3{font-size:14px;color:var(--text-secondary);margin-bottom:10px;font-weight:600}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px}
+.summary-card{background:rgba(74,90,58,.1);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:12px;text-align:center}
+.summary-card .label{font-size:11px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px}
+.summary-card .value{font-size:22px;font-weight:700;color:var(--gold)}
+.summary-card .value.good{color:var(--correct)}
+.summary-card .value.bad{color:var(--wrong)}
+
+.submit-warning{font-size:12px;color:var(--text-muted);background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.1);border-radius:6px;padding:10px 12px;margin-top:12px;line-height:1.6}
+.submit-warning strong{color:var(--wrong)}
+
+.submit-success{text-align:center;padding:20px 0}
+.submit-success .icon{font-size:48px;margin-bottom:12px}
+.submit-success .msg{font-size:15px;color:var(--text-primary);font-weight:600;margin-bottom:6px}
+.submit-success .sub{font-size:13px;color:var(--text-muted)}
+
+.submit-error{text-align:center;padding:20px 0}
+.submit-error .icon{font-size:48px;margin-bottom:12px}
+.submit-error .msg{font-size:14px;color:var(--wrong);font-weight:600;margin-bottom:6px}
+.submit-error .sub{font-size:12px;color:var(--text-muted);line-height:1.6}
+
+.submit-name-row{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.submit-name-row label{font-size:13px;color:var(--text-secondary);font-weight:600;white-space:nowrap}
+.submit-name-input{flex:1;background:var(--bg-input);border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:9px 12px;color:var(--text-primary);font-size:14px;font-family:inherit;outline:none}
+.submit-name-input:focus{border-color:var(--gold-dim)}
+
+.round-select{display:flex;gap:8px;margin-bottom:16px}
+.round-btn{flex:1;padding:10px;border:1px solid var(--border-outer);border-radius:8px;background:transparent;color:var(--text-muted);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;text-align:center}
+.round-btn.selected{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,.08)}
+.round-btn:hover{border-color:rgba(255,255,255,.4);color:var(--text-secondary)}
+.footer-brand{font-family:'Noto Serif KR',serif;font-size:14px;color:var(--gold-dim);margin-bottom:6px}
+.footer-slogan{font-size:12px;color:var(--text-muted)}
+.footer-warning{margin-top:20px;padding:16px;background:rgba(239,68,68,.04);border:1px solid rgba(239,68,68,.15);border-radius:8px;font-size:11.5px;color:var(--text-muted);line-height:1.8;max-width:700px;margin-left:auto;margin-right:auto}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-left">
+    <div class="logo">[오름] 국어<span>· 쪽지시험</span></div>
+    <div class="header-subtitle">음운변동 기출 빈출 어휘</div>
+  </div>
+  <div class="header-right">
+    <div class="score-display">자기 채점 <strong id="scoreDisplay">0</strong> / <span id="totalDisplay">0</span></div>
+    <svg class="progress-ring" viewBox="0 0 42 42">
+      <circle class="bg" cx="21" cy="21" r="18"/>
+      <circle class="fg" id="progressRing" cx="21" cy="21" r="18" stroke-dasharray="113.1" stroke-dashoffset="113.1"/>
+      <text class="progress-pct" id="progressPct" x="21" y="24" text-anchor="middle">0%</text>
+    </svg>
+  </div>
+</div>
+<div class="name-bar">
+  <span>이름:</span><input type="text" class="name-input" placeholder="이름 입력">
+  <span style="margin-left:12px">날짜:</span><input type="text" class="name-input" id="dateInput" style="width:140px">
+</div>
+<div class="tabs">
+  <div class="tab active" onclick="switchPage(0)">1회 (1~28번)</div>
+  <div class="tab" onclick="switchPage(1)">2회 (29~56번)</div>
+  <div class="tab" onclick="switchPage(2)">3회 (57~84번)</div>
+</div>
+<div class="controls">
+  <button class="btn primary" onclick="checkPage()">이 페이지 채점</button>
+  <button class="btn" onclick="revealPage()">정답 보기</button>
+  <button class="btn" onclick="hidePage()">정답 숨기기</button>
+  <button class="btn danger" onclick="resetAll()">전체 초기화</button>
+  <button class="btn submit-btn" onclick="openSubmitModal()">📤 결과 제출</button>
+</div>
+
+<!-- SUBMIT MODAL -->
+<div class="modal-overlay" id="submitOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">📤 결과 제출</span>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="modalBody">
+      <!-- 동적으로 채워짐 -->
+    </div>
+    <div class="modal-footer" id="modalFooter">
+      <button class="btn" onclick="closeModal()">취소</button>
+      <button class="btn primary" id="confirmSubmitBtn" onclick="submitResults()">제출하기</button>
+    </div>
+  </div>
+</div>
+<div class="page active" id="page0"></div>
+<div class="page" id="page1"></div>
+<div class="page" id="page2"></div>
+<div class="footer">
+  <div class="footer-brand">[오름] 국어</div>
+  <div class="footer-slogan">성적이 오름, 자신감이 오름! · 방법의 옳음, 선택의 옳음!</div>
+  <div class="footer-warning">
+    본 자료는 오직 <strong>[오름] 국어</strong> 학원 수강생들의 성적 향상을 위해 제작된 비매품입니다.
+    본 자료를 외부로 유출하거나 무단 배포하는 행위는 학원과 동료 수강생들에게 심각한 피해를 주는 범죄 행위입니다.<br>
+    무단 배포 적발 시, 즉각적인 퇴원 조치는 물론, 유출로 인한 경영상 손실에 대해 <strong>강력한 법적 조치</strong>를 취할 예정입니다.
+  </div>
+</div>
+<script>
+// ✅ = HWP 원본 대조 완료, ⚠️ = PDF 이미지 기반 (수동 검수 필요)
+const DATA=[
+  // ══════ 1회 (1~28) — 전체 HWP 대조 완료 ✅ ══════
+  {n:1,표기:"삭일",양상:["삭닐","상닐"],규칙:["ㄴ첨가","비음화"],ex:true},
+  {n:2,표기:"옷맵시",양상:["옫맵시","온맵시","온맵씨"],규칙:["음절끝소리규칙","비음화","된소리되기①"]},
+  {n:3,표기:"닭곰탕",양상:["닥곰탕","닥꼼탕"],규칙:["자음군단순화","된소리되기①"]},
+  {n:4,표기:"피어",양상:["피여","펴"],규칙:["반모음첨가","모음의축약"]},
+  {n:5,표기:"값을",양상:["갑슬","갑쓸"],규칙:["연음 현상","된소리되기①"]},
+  {n:6,표기:"읊고",양상:["읖고","읍고","읍꼬"],규칙:["자음군단순화","음끝","된소리되기①"]},
+  {n:7,표기:"밟고",양상:["밥고","밥꼬"],규칙:["자음군단순화","된소리되기①"]},
+  {n:8,표기:"뚫네",양상:["뚤네","뚤레"],규칙:["자음군단순화","유음화"]},
+  {n:9,표기:"읽는",양상:["익는","잉는"],규칙:["자음군단순화","비음화"]},
+  {n:10,표기:"낯설다",양상:["낟설다","낟썰다"],규칙:["음끝","된소리되기①"]},
+  {n:11,표기:"맥없다",양상:["매겂다","매겁다","매겁따"],규칙:["연음현상","자음군단순화","된소리되기①"]},
+  {n:12,표기:"값있다",양상:["갑있다","가빘다","가빋다","가빋따"],규칙:["자음군단순화","연음 현상","음끝","된소리되기①"]},
+  {n:13,표기:"얹혀살다",양상:["언쳐살다"],규칙:["자음의축약"]},
+  {n:14,표기:"핥아먹다",양상:["할타먹다","할타먹따"],규칙:["연음 현상","된소리되기①"]},
+  {n:15,표기:"줄넘기",양상:["줄럼기","줄럼끼"],규칙:["유음화","된소리되기②"],ex:true},
+  {n:16,표기:"생산량",양상:["생산냥"],규칙:["(3음절한자어) 비음화"]},
+  {n:17,표기:"맨입",양상:["맨닙"],규칙:["ㄴ첨가"]},
+  {n:18,표기:"눈요기",양상:["눈뇨기"],규칙:["ㄴ첨가"]},
+  {n:19,표기:"식용유",양상:["식용뉴","시굥뉴"],규칙:["ㄴ첨가","연음 현상"]},
+  {n:20,표기:"넘도록",양상:["넘또록"],규칙:["된소리되기②"]},
+  {n:21,표기:"물엿",양상:["물녓","물렷","물렫"],규칙:["ㄴ첨가","유음화","음끝"]},
+  {n:22,표기:"영업용",양상:["영업뇽","영엄뇽"],규칙:["ㄴ첨가","비음화"]},
+  {n:23,표기:"열여덟",양상:["열녀덟","열려덟","열려덜"],규칙:["ㄴ첨가","유음화","자음군단순화"]},
+  {n:24,표기:"급행열차",양상:["급행녈차","그팽녈차"],규칙:["ㄴ첨가","자음의축약"]},
+  {n:25,표기:"들일",양상:["들닐","들릴"],규칙:["ㄴ첨가","유음화"]},
+  {n:26,표기:"설익다",양상:["설닉다","설릭다","설릭따"],규칙:["ㄴ첨가","유음화","된소리되기①"]},
+  {n:27,표기:"늑막염",양상:["늑막념","능막념","능망념"],규칙:["ㄴ첨가","비음화","비음화"]},
+  {n:28,표기:"알약",양상:["알냑","알략"],규칙:["ㄴ첨가","유음화"]},
+
+  // ══════ 2회 (29~56) — 전체 HWP 대조 완료 ✅ ══════
+  {n:29,표기:"맑네",양상:["막네","망네"],규칙:["자음군단순화","비음화"]},
+  {n:30,표기:"무늬",양상:["무니"],규칙:["*음변아님*"],trap:true},
+  {n:31,표기:"낮일",양상:["낮닐","낟닐","난닐"],규칙:["ㄴ첨가","음끝","비음화"]},
+  {n:32,표기:"겉옷",양상:["걷옷","거돗","거돋"],규칙:["음끝","연음 현상","음끝"]},
+  {n:33,표기:"낫아",양상:["나아"],규칙:["ㅅ불규칙활용"],trap:true},
+  {n:34,표기:"부엌만",양상:["부억만","부엉만"],규칙:["음끝","비음화"]},
+  {n:35,표기:"낳아",양상:["나아"],규칙:["ㅎ탈락"]},
+  {n:36,표기:"낱낱이",양상:["낟낱이","난낱이","난나티","난나치"],규칙:["음끝","비음화","연음 현상","구개음화"]},
+  {n:37,표기:"겉모습",양상:["걷모습","건모습"],규칙:["음끝","비음화"]},
+  {n:38,표기:"백분율",양상:["백분뉼","백뿐뉼"],규칙:["ㄴ첨가","된소리되기①"]},
+  {n:39,표기:"색연필",양상:["색년필","생년필"],규칙:["ㄴ첨가","비음화"]},
+  {n:40,표기:"갈증",양상:["갈쯩"],규칙:["된소리되기③"]},
+  {n:41,표기:"흙냄새",양상:["흑냄새","흥냄새"],규칙:["자음군단순화","비음화"]},
+  {n:42,표기:"법석",양상:["법썩"],규칙:["된소리되기①"]},
+  {n:43,표기:"값하다",양상:["갑하다","가파다"],규칙:["자음군단순화","자음의축약"]},
+  {n:44,표기:"더듬지",양상:["더듬찌"],규칙:["된소리되기③"]},
+  {n:45,표기:"홑이불",양상:["홑니불","혿니불","혼니불"],규칙:["ㄴ첨가","음끝","비음화"]},
+  {n:46,표기:"흙탕길",양상:["흑탕길","흑탕낄"],규칙:["자음군단순화","된소리되기"]},
+  {n:47,표기:"시계",양상:["시게"],규칙:["*음변아님*"],trap:true},
+  {n:48,표기:"공권력",양상:["공권녁","공꿘녁"],규칙:["(3음절한자어) 비음화","된소리되기"]},
+  {n:49,표기:"유희",양상:["유히"],규칙:["*음변아님*"],trap:true},
+  {n:50,표기:"낯익히다",양상:["낯닉히다","낟닉히다","난닉히다","난니키다"],규칙:["ㄴ첨가","음끝","비음화","자음의축약"]},
+  {n:51,표기:"넓죽하다",양상:["넙죽하다","넙쭉하다","넙쭈카다"],규칙:["자음군단순화","된소리되기①","자음의축약"]},
+  {n:52,표기:"음운론",양상:["으문론","으문논"],규칙:["연음 현상","(3음절한자어) 비음화"]},
+  {n:53,표기:"옻나무",양상:["옫나무","온나무"],규칙:["음끝","비음화"]},
+  {n:54,표기:"결단력",양상:["결딴력","결딴녁"],규칙:["된소리되기③","(3음절한자어) 비음화"]},
+  {n:55,표기:"칡범",양상:["칙범","칙뻠"],규칙:["자음군단순화","된소리되기①"]},
+  {n:56,표기:"침략",양상:["침냑"],규칙:["비음화"]},
+
+  // ══════ 3회 (57~84) — 57~63 HWP ✅, 64~84 PDF ⚠️ ══════
+  {n:57,표기:"급박한",양상:["급빡한","급빠칸"],규칙:["된소리되기①","자음의축약"]},
+  {n:58,표기:"대답한",양상:["대다판"],규칙:["자음의축약"]},
+  {n:59,표기:"따뜻한",양상:["따뜯한","따뜨탄"],규칙:["음끝","자음의축약"]},
+  {n:60,표기:"맏형",양상:["마텽"],규칙:["자음의축약"]},
+  {n:61,표기:"넓둥글다",양상:["넙둥글다","넙뚱글다"],규칙:["자음군단순화","된소리되기①"]},
+  {n:62,표기:"헛웃음",양상:["헏웃음","허둣음","허두슴"],규칙:["음끝","연음 현상","연음 현상"]},
+  {n:63,표기:"금요일",양상:["그묘일"],규칙:["연음 현상"]},
+  // ⚠️ 이하 PDF 이미지 기반
+  {n:64,표기:"되어",양상:["되여","돼"],규칙:["반모음첨가","모음의축약"]},
+  {n:65,표기:"아니오",양상:["아니요","아뇨"],규칙:["반모음첨가","모음의축약"]},
+  {n:66,표기:"갈 길",양상:["갈 낄"],규칙:["된소리되기④"]},
+  {n:67,표기:"봄비",양상:["봄삐"],규칙:["사이시옷현상"]},
+  {n:68,표기:"굶다",양상:["굼다","굼따"],규칙:["자음군단순화","된소리되기②"]},
+  {n:69,표기:"꽃 위",양상:["꼰 위","꼬 뒤"],규칙:["자음군단순화","연음 현상"]},
+  {n:70,표기:"의견란",양상:["의견난"],규칙:["(3음절한자어) 비음화"]},
+  {n:71,표기:"좋으면",양상:["조으면"],규칙:["ㅎ탈락"]},
+  {n:72,표기:"늦여름",양상:["늗여름","느녀름","는녀름"],규칙:["음끝","ㄴ첨가","비음화"]},
+  {n:73,표기:"긁는",양상:["극는","긍는"],규칙:["자음군단순화","비음화"]},
+  {n:74,표기:"꽃꽂이",양상:["꼳꼬지","꼳꼬지"],규칙:["음끝","연음 현상"]},
+  {n:75,표기:"윷조리다",양상:["윱조리다","윰쪼리다"],규칙:["자음군단순화","음끝","된소리되기①"]},
+  {n:76,표기:"호박엿",양상:["호박녇","호방녇","호방년"],규칙:["ㄴ첨가","비음화","음끝"]},
+  {n:77,표기:"가랑잎",양상:["가랑닢","가랑닙"],규칙:["ㄴ첨가","음끝"]},
+  {n:78,표기:"서른여덟",양상:["서른녀덜"],규칙:["ㄴ첨가","자음군단순화"]},
+  {n:79,표기:"읽느라",양상:["익느라","잉느라"],규칙:["자음군단순화","비음화"]},
+  {n:80,표기:"예삿일",양상:["예산닐","예산닐"],규칙:["음끝","ㄴ첨가","비음화"]},
+  {n:81,표기:"앓았다",양상:["알앋다","아랃다","아란따"],규칙:["자음군단순화","연음 현상","음끝","된소리되기①"]},
+  {n:82,표기:"심리",양상:["심니"],규칙:["비음화"]},
+  {n:83,표기:"두통약",양상:["두통냑"],규칙:["ㄴ첨가"]},
+  {n:84,표기:"강릉",양상:["강능"],규칙:["비음화"]},
+];
+
+let currentPage=0,selfScores={};
+function getPageItems(p){const s=p*28+1;return DATA.filter(d=>d.n>=s&&d.n<s+28)}
+
+function renderPage(pi){
+  const el=document.getElementById('page'+pi),items=getPageItems(pi);
+  let h='<div class="quiz-grid">';
+  items.forEach(item=>{
+    const isEx=item.ex,isTrap=item.trap;
+    h+=`<div class="quiz-item ${isEx?'example':''} ${isTrap?'trap':''}" id="item-${item.n}">`;
+    h+=`<div class="item-header">
+      <span class="item-num ${isTrap?'trap-num':''}">${isEx?'예시':item.n+'번'}</span>
+      <span class="item-표기">${item.표기}</span>
+      <span class="item-status" id="status-${item.n}"></span>
+    </div><div class="item-body">`;
+
+    // 양상
+    h+=`<div class="field-section"><div class="field-label">음운 변동 양상</div>`;
+    if(isEx){
+      h+=`<div class="ex-step">${item.표기} → ${item.양상.join(' → ')}</div>`;
+    } else {
+      h+=`<div class="step-row"><span class="step-origin">${item.표기}</span>`;
+      item.양상.forEach((_,i)=>{
+        h+=`<span class="step-arrow">→</span><input type="text" class="step-input" id="s-${item.n}-${i}" placeholder="?">`;
+      });
+      h+=`</div>`;
+    }
+    h+=`</div>`;
+
+    // 규칙
+    h+=`<div class="field-section"><div class="field-label">변동 규칙</div>`;
+    if(isEx){
+      h+=`<div class="ex-rule">${item.규칙.map((r,i)=>`<span class="ex-rule-chip"><span class="rn">${i+1}</span>${r}</span>`).join('')}</div>`;
+    } else {
+      h+=`<div class="rule-row">`;
+      item.규칙.forEach((_,i)=>{
+        h+=`<div class="rule-slot"><span class="rule-num">${i+1}</span><input type="text" class="rule-input" id="r-${item.n}-${i}" placeholder="규칙 ${i+1}"></div>`;
+      });
+      h+=`</div>`;
+      if(isTrap) h+=`<div class="trap-note">⚡ 함정 문항 — 음운변동이 아닐 수도 있습니다</div>`;
+    }
+    h+=`</div></div>`;
+
+    if(!isEx){
+      h+=`<div class="item-actions">
+        <button class="item-btn" onclick="checkItem(${item.n})">채점</button>
+        <button class="item-btn" onclick="revealItem(${item.n})">정답</button>
+        <button class="item-btn" id="mark-o-${item.n}" onclick="markSelf(${item.n},true)">⭕ 맞음</button>
+        <button class="item-btn" id="mark-x-${item.n}" onclick="markSelf(${item.n},false)">❌ 틀림</button>
+      </div>`;
+    }
+    h+=`</div>`;
+  });
+  h+='</div>';
+  el.innerHTML=h;
+}
+
+function norm(s){return s.replace(/\s+/g,'').replace(/[()（）\*]/g,'').replace(/[①②③④⑤⑥]/g,'').toLowerCase()}
+
+// 동의어 테이블: 어떤 걸 적어도 같은 정답으로 인정
+const ALIASES = {
+  '음절끝소리규칙': ['음절의끝소리규칙','음절끝소리법칙','평폐쇄음화','7대표음'],
+  '자음군단순화': ['겹받침단순화','자음군단순화규칙'],
+  '자음의축약': ['거센소리화','축약','자음축약'],
+  '된소리되기': ['경음화','된소리화'],
+  '연음현상': ['연음','연음법칙','연음규칙'],
+  '비음화': ['비음동화'],
+  '유음화': ['유음동화'],
+  '모음의축약': ['모음축약','반모음교체'],
+  'ㄴ첨가': ['ㄴ첨가규칙','니은첨가'],
+  'ㅎ탈락': ['ㅎ탈락규칙'],
+  'ㅅ불규칙활용': ['ㅅ불규칙'],
+  '구개음화': ['구개음화규칙'],
+  '사이시옷현상': ['사잇소리현상','사이시옷','사잇소리'],
+  '반모음첨가': ['활음첨가','반모음첨가규칙'],
+  '(3음절한자어)비음화': ['3음절한자어비음화','한자어비음화'],
+  '*음변아님*': ['음변아님','없음','해당없음','x','없다'],
+};
+
+// 정규화 후 비교: 원문자 제거, 공백 제거, 별칭 허용
+function isMatch(input, answer){
+  const ni = norm(input), na = norm(answer);
+  if(ni === na) return true;
+  // 된소리되기①②③④ → 된소리되기 로 정답도 정규화해서 비교
+  const naBase = na.replace(/[①②③④⑤⑥1234]/g,'');
+  const niBase = ni.replace(/[①②③④⑤⑥1234]/g,'');
+  if(niBase === naBase) return true;
+  // 별칭 테이블 검색
+  for(const [canonical, aliases] of Object.entries(ALIASES)){
+    const all = [canonical, ...aliases].map(norm);
+    // 정답이 이 그룹에 속하는지
+    if(all.some(a => naBase.includes(a) || a.includes(naBase))){
+      // 입력도 이 그룹에 속하면 정답
+      if(all.some(a => niBase === a || niBase.includes(a) || a.includes(niBase))) return true;
+    }
+  }
+  return false;
+}
+
+function checkSingleInput(inp){
+  const id=inp.id;
+  const sM=id.match(/^s-(\d+)-(\d+)$/),rM=id.match(/^r-(\d+)-(\d+)$/);
+  let ans=null,n=0,type='',idx=0;
+  if(sM){n=+sM[1];idx=+sM[2];type='s';const item=DATA.find(d=>d.n===n);if(item)ans=item.양상[idx]}
+  else if(rM){n=+rM[1];idx=+rM[2];type='r';const item=DATA.find(d=>d.n===n);if(item)ans=item.규칙[idx]}
+  if(ans==null)return;
+  const ok=isMatch(inp.value,ans);
+  inp.classList.remove('correct-input','wrong-input');
+  inp.classList.add(ok?'correct-input':'wrong-input');
+  const item=DATA.find(d=>d.n===n);if(!item)return;
+  const allIds=[];
+  item.양상.forEach((_,i)=>allIds.push(`s-${n}-${i}`));
+  item.규칙.forEach((_,i)=>allIds.push(`r-${n}-${i}`));
+  const ci=allIds.indexOf(id);
+  if(ci>=0&&ci<allIds.length-1){const next=document.getElementById(allIds[ci+1]);if(next&&!next.disabled)next.focus()}
+}
+
+document.addEventListener('keydown',function(e){
+  if(e.key!=='Enter')return;
+  const t=e.target;
+  if(t.classList.contains('step-input')||t.classList.contains('rule-input')){
+    e.preventDefault();
+    if(t.value.trim())checkSingleInput(t);
+  }
+});
+
+function checkItem(n){
+  const item=DATA.find(d=>d.n===n);if(!item)return;
+  item.양상.forEach((ans,i)=>{const inp=document.getElementById(`s-${n}-${i}`);if(!inp)return;const ok=isMatch(inp.value,ans);inp.classList.remove('correct-input','wrong-input');inp.classList.add(ok?'correct-input':'wrong-input')});
+  item.규칙.forEach((ans,i)=>{const inp=document.getElementById(`r-${n}-${i}`);if(!inp)return;const ok=isMatch(inp.value,ans);inp.classList.remove('correct-input','wrong-input');inp.classList.add(ok?'correct-input':'wrong-input')});
+}
+function revealItem(n){
+  const item=DATA.find(d=>d.n===n);if(!item)return;
+  item.양상.forEach((ans,i)=>{const inp=document.getElementById(`s-${n}-${i}`);if(!inp)return;inp.value=ans;inp.classList.remove('correct-input','wrong-input');inp.classList.add('revealed');inp.disabled=true});
+  item.규칙.forEach((ans,i)=>{const inp=document.getElementById(`r-${n}-${i}`);if(!inp)return;inp.value=ans;inp.classList.remove('correct-input','wrong-input');inp.classList.add('revealed');inp.disabled=true});
+}
+function markSelf(n,correct){
+  selfScores[n]=correct;
+  const el=document.getElementById('item-'+n),st=document.getElementById('status-'+n);
+  el.classList.remove('answered-correct','answered-wrong');
+  el.classList.add(correct?'answered-correct':'answered-wrong');
+  st.textContent=correct?'✅':'❌';st.classList.add('show');
+  const o=document.getElementById('mark-o-'+n),x=document.getElementById('mark-x-'+n);
+  o.classList.toggle('active-o',correct);x.classList.toggle('active-x',!correct);
+  if(correct)x.classList.remove('active-x');if(!correct)o.classList.remove('active-o');
+  updateScore();
+}
+function updateScore(){
+  const total=Object.keys(selfScores).length,correct=Object.values(selfScores).filter(v=>v).length;
+  document.getElementById('scoreDisplay').textContent=correct;
+  document.getElementById('totalDisplay').textContent=total;
+  const max=DATA.filter(d=>!d.ex).length,pct=max>0?Math.round((correct/max)*100):0,c=113.1;
+  document.getElementById('progressRing').style.strokeDashoffset=c-(c*pct/100);
+  document.getElementById('progressPct').textContent=pct+'%';
+}
+function checkPage(){getPageItems(currentPage).forEach(item=>{if(!item.ex)checkItem(item.n)})}
+function revealPage(){getPageItems(currentPage).forEach(item=>{if(!item.ex)revealItem(item.n)})}
+function hidePage(){
+  getPageItems(currentPage).forEach(item=>{if(item.ex)return;
+    item.양상.forEach((_,i)=>{const inp=document.getElementById(`s-${item.n}-${i}`);if(inp){inp.value='';inp.disabled=false;inp.classList.remove('correct-input','wrong-input','revealed')}});
+    item.규칙.forEach((_,i)=>{const inp=document.getElementById(`r-${item.n}-${i}`);if(inp){inp.value='';inp.disabled=false;inp.classList.remove('correct-input','wrong-input','revealed')}});
+  });
+}
+function switchPage(idx){
+  document.querySelectorAll('.page').forEach((p,i)=>p.classList.toggle('active',i===idx));
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+  currentPage=idx;
+}
+function resetAll(){
+  if(!confirm('전체 초기화하시겠습니까?'))return;selfScores={};
+  DATA.forEach(item=>{if(item.ex)return;
+    item.양상.forEach((_,i)=>{const inp=document.getElementById(`s-${item.n}-${i}`);if(inp){inp.value='';inp.disabled=false;inp.classList.remove('correct-input','wrong-input','revealed')}});
+    item.규칙.forEach((_,i)=>{const inp=document.getElementById(`r-${item.n}-${i}`);if(inp){inp.value='';inp.disabled=false;inp.classList.remove('correct-input','wrong-input','revealed')}});
+    const el=document.getElementById('item-'+item.n);if(el)el.classList.remove('answered-correct','answered-wrong');
+    const st=document.getElementById('status-'+item.n);if(st){st.textContent='';st.classList.remove('show')}
+    const o=document.getElementById('mark-o-'+item.n),x=document.getElementById('mark-x-'+item.n);
+    if(o)o.classList.remove('active-o');if(x)x.classList.remove('active-x');
+  });updateScore();
+}
+// ══════ GOOGLE SHEETS 제출 ══════
+// ⬇️ 아래 URL을 본인의 Google Apps Script 웹앱 URL로 교체하세요
+const SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_https://script.google.com/macros/s/AKfycbyFH8xv7MQwm3yHlqQ7InApi8LR5VE1ISmHaDD0Z_NxPKd6MVdZU10yLCqdHdpqiyQF/exec';
+
+let submitRound = 0; // 0,1,2
+
+function openSubmitModal(){
+  submitRound = currentPage;
+  const name = document.querySelector('.name-input').value.trim();
+  const items = getPageItems(submitRound).filter(d=>!d.ex);
+  
+  // 각 문항별 채점 결과 수집
+  let correct=0, wrong=0, unanswered=0;
+  items.forEach(item=>{
+    const result = getItemResult(item);
+    if(result.status==='correct') correct++;
+    else if(result.status==='wrong') wrong++;
+    else unanswered++;
+  });
+
+  const total = items.length;
+  const pct = total>0 ? Math.round(correct/total*100) : 0;
+
+  let html = '';
+  // 이름
+  html += `<div class="submit-name-row">
+    <label>이름</label>
+    <input type="text" class="submit-name-input" id="submitName" value="${name}" placeholder="이름을 입력하세요">
+  </div>`;
+
+  // 회차 선택
+  html += `<div class="round-select">
+    <button class="round-btn ${submitRound===0?'selected':''}" onclick="selectRound(0)">1회</button>
+    <button class="round-btn ${submitRound===1?'selected':''}" onclick="selectRound(1)">2회</button>
+    <button class="round-btn ${submitRound===2?'selected':''}" onclick="selectRound(2)">3회</button>
+  </div>`;
+
+  // 요약
+  html += `<div class="submit-summary">
+    <h3>${submitRound+1}회 응시 결과</h3>
+    <div class="summary-grid">
+      <div class="summary-card"><div class="label">정답</div><div class="value good">${correct}</div></div>
+      <div class="summary-card"><div class="label">오답</div><div class="value bad">${wrong}</div></div>
+      <div class="summary-card"><div class="label">정답률</div><div class="value">${pct}%</div></div>
+    </div>
+  </div>`;
+
+  if(unanswered > 0){
+    html += `<div class="submit-warning">⚠️ 아직 <strong>${unanswered}개 문항</strong>이 채점되지 않았습니다. 채점 후 제출하면 더 정확한 결과가 기록됩니다.</div>`;
+  }
+
+  document.getElementById('modalBody').innerHTML = html;
+  document.getElementById('confirmSubmitBtn').style.display = '';
+  document.getElementById('confirmSubmitBtn').textContent = '제출하기';
+  document.getElementById('confirmSubmitBtn').disabled = false;
+  document.getElementById('submitOverlay').classList.add('open');
+}
+
+function selectRound(r){
+  submitRound = r;
+  openSubmitModal(); // re-render with new round
+}
+
+function getItemResult(item){
+  // 양상 채점
+  let allCorrect = true;
+  let anyAttempted = false;
+  const 양상Results = [];
+  const 규칙Results = [];
+
+  item.양상.forEach((ans,i)=>{
+    const inp = document.getElementById(`s-${item.n}-${i}`);
+    if(!inp) return;
+    const val = inp.value.trim();
+    if(val) anyAttempted = true;
+    const ok = val ? isMatch(val, ans) : false;
+    if(!ok) allCorrect = false;
+    양상Results.push({input:val, answer:ans, correct:ok});
+  });
+  item.규칙.forEach((ans,i)=>{
+    const inp = document.getElementById(`r-${item.n}-${i}`);
+    if(!inp) return;
+    const val = inp.value.trim();
+    if(val) anyAttempted = true;
+    const ok = val ? isMatch(val, ans) : false;
+    if(!ok) allCorrect = false;
+    규칙Results.push({input:val, answer:ans, correct:ok});
+  });
+
+  // 자기채점 우선
+  if(selfScores[item.n] !== undefined){
+    return {
+      status: selfScores[item.n] ? 'correct' : 'wrong',
+      양상: 양상Results, 규칙: 규칙Results,
+      selfMarked: true
+    };
+  }
+
+  if(!anyAttempted) return {status:'unanswered', 양상:양상Results, 규칙:규칙Results};
+  return {
+    status: allCorrect ? 'correct' : 'wrong',
+    양상: 양상Results, 규칙: 규칙Results
+  };
+}
+
+function submitResults(){
+  const name = document.getElementById('submitName').value.trim();
+  if(!name){
+    alert('이름을 입력해주세요.');
+    document.getElementById('submitName').focus();
+    return;
+  }
+
+  const btn = document.getElementById('confirmSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = '제출 중...';
+
+  const items = getPageItems(submitRound).filter(d=>!d.ex);
+  const results = [];
+  let correctCount = 0;
+
+  items.forEach(item=>{
+    const r = getItemResult(item);
+    if(r.status === 'correct') correctCount++;
+    results.push({
+      번호: item.n,
+      표기: item.표기,
+      정오: r.status,
+      양상_입력: r.양상.map(a=>a.input).join(' → '),
+      양상_정답: item.양상.join(' → '),
+      규칙_입력: r.규칙.map(a=>a.input).join(', '),
+      규칙_정답: item.규칙.join(', '),
+    });
+  });
+
+  const payload = {
+    이름: name,
+    회차: (submitRound+1) + '회',
+    날짜: document.getElementById('dateInput').value,
+    점수: correctCount + '/' + items.length,
+    정답률: items.length>0 ? Math.round(correctCount/items.length*100) + '%' : '0%',
+    문항별: results
+  };
+
+  if(SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'){
+    document.getElementById('modalBody').innerHTML = `
+      <div class="submit-error">
+        <div class="icon">⚙️</div>
+        <div class="msg">Apps Script URL 미설정</div>
+        <div class="sub">HTML 파일의 <code>SCRIPT_URL</code> 상수를<br>배포된 Google Apps Script 웹앱 URL로 교체해주세요.</div>
+      </div>`;
+    btn.style.display = 'none';
+    return;
+  }
+
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  }).then(()=>{
+    document.getElementById('modalBody').innerHTML = `
+      <div class="submit-success">
+        <div class="icon">✅</div>
+        <div class="msg">${name}님의 ${submitRound+1}회 결과가 제출되었습니다!</div>
+        <div class="sub">${correctCount}/${items.length} 정답 (${payload.정답률})</div>
+      </div>`;
+    btn.style.display = 'none';
+  }).catch(err=>{
+    document.getElementById('modalBody').innerHTML = `
+      <div class="submit-error">
+        <div class="icon">❌</div>
+        <div class="msg">제출 실패</div>
+        <div class="sub">네트워크 연결을 확인해주세요.<br>${err.message||''}</div>
+      </div>`;
+    btn.textContent = '다시 시도';
+    btn.disabled = false;
+  });
+}
+
+function closeModal(e){
+  if(e && e.target !== e.currentTarget) return;
+  document.getElementById('submitOverlay').classList.remove('open');
+}
+
+(function(){
+  const t=new Date();
+  document.getElementById('dateInput').value=t.getFullYear()+'.'+String(t.getMonth()+1).padStart(2,'0')+'.'+String(t.getDate()).padStart(2,'0');
+  renderPage(0);renderPage(1);renderPage(2);updateScore();
+})();
+</script>
+</body>
+</html>
