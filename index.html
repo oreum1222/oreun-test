@@ -205,7 +205,7 @@ const DATA=[
   {n:1,표기:"삭일",양상:["삭닐","상닐"],규칙:["ㄴ첨가","비음화"],ex:true},
   {n:2,표기:"옷맵시",양상:["옫맵시","온맵시","온맵씨"],규칙:["음절끝소리규칙","비음화","된소리되기①"]},
   {n:3,표기:"닭곰탕",양상:["닥곰탕","닥꼼탕"],규칙:["자음군단순화","된소리되기①"]},
-  {n:4,표기:"피어",양상:["피여","펴"],규칙:["반모음첨가","모음의축약"]},
+  {n:4,표기:"피어",양상:["피여","펴"],규칙:["반모음첨가","모음의축약"],alt:true},
   {n:5,표기:"값을",양상:["갑슬","갑쓸"],규칙:["연음 현상","된소리되기①"]},
   {n:6,표기:"읊고",양상:["읖고","읍고","읍꼬"],규칙:["자음군단순화","음끝","된소리되기①"]},
   {n:7,표기:"밟고",양상:["밥고","밥꼬"],규칙:["자음군단순화","된소리되기①"]},
@@ -270,8 +270,8 @@ const DATA=[
   {n:62,표기:"헛웃음",양상:["헏웃음","허둣음","허두슴"],규칙:["음끝","연음 현상","연음 현상"]},
   {n:63,표기:"금요일",양상:["그묘일"],규칙:["연음 현상"]},
   // ⚠️ 이하 PDF 이미지 기반
-  {n:64,표기:"되어",양상:["되여","돼"],규칙:["반모음첨가","모음의축약"]},
-  {n:65,표기:"아니오",양상:["아니요","아뇨"],규칙:["반모음첨가","모음의축약"]},
+  {n:64,표기:"되어",양상:["되여","돼"],규칙:["반모음첨가","모음의축약"],alt:true},
+  {n:65,표기:"아니오",양상:["아니요","아뇨"],규칙:["반모음첨가","모음의축약"],alt:true},
   {n:66,표기:"갈 길",양상:["갈 낄"],규칙:["된소리되기④"]},
   {n:67,표기:"봄비",양상:["봄삐"],규칙:["사이시옷현상"]},
   {n:68,표기:"굶다",양상:["굼다","굼따"],규칙:["자음군단순화","된소리되기②"]},
@@ -309,9 +309,17 @@ function renderPage(pi){
     </div><div class="item-body">`;
 
     // 양상
-    h+=`<div class="field-section"><div class="field-label">음운 변동 양상</div>`;
+    h+=`<div class="field-section"><div class="field-label">음운 변동 양상${item.alt?' <span style="color:var(--gold-dim);font-size:10px;font-weight:500;text-transform:none;letter-spacing:0">(각각 다른 발음)</span>':''}</div>`;
     if(isEx){
-      h+=`<div class="ex-step">${item.표기} → ${item.양상.join(' → ')}</div>`;
+      h+=`<div class="ex-step">${item.표기} → ${item.양상.join(item.alt?' 또는 ':' → ')}</div>`;
+    } else if(item.alt){
+      // 대안 발음: 각각 독립된 발음으로 표시
+      h+=`<div class="step-row">`;
+      item.양상.forEach((_,i)=>{
+        if(i > 0) h+=`<span class="step-arrow" style="color:var(--gold-dim);font-size:12px;font-weight:600">또는</span>`;
+        h+=`<div style="display:flex;align-items:center;gap:4px"><span style="color:var(--text-muted);font-size:11px">${item.표기} →</span><input type="text" class="step-input" id="s-${item.n}-${i}" placeholder="?"></div>`;
+      });
+      h+=`</div>`;
     } else {
       h+=`<div class="step-row"><span class="step-origin">${item.표기}</span>`;
       item.양상.forEach((_,i)=>{
@@ -353,7 +361,7 @@ function norm(s){return s.normalize('NFC').replace(/\s+/g,'').replace(/[()（）
 
 // 동의어 테이블: 어떤 걸 적어도 같은 정답으로 인정
 const ALIASES = {
-  '음절끝소리규칙': ['음절의끝소리규칙','음절끝소리법칙','평폐쇄음화','7대표음'],
+  '음절끝소리규칙': ['음절의끝소리규칙','음절끝소리법칙','평폐쇄음화','7대표음','음끝'],
   '자음군단순화': ['겹받침단순화','자음군단순화규칙'],
   '자음의축약': ['거센소리화','축약','자음축약'],
   '된소리되기': ['경음화','된소리화'],
