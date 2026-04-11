@@ -641,11 +641,11 @@ function submitResults(){
     return mark + ' ' + item.표기;
   }).join(',');
 
-  // 틀린 문항 목록
+  // 틀린 + 미응답 문항 목록
   const wrongItems = [];
   items.forEach(item=>{
     const r = getItemResult(item);
-    if(r.status === 'wrong') wrongItems.push(item);
+    if(r.status !== 'correct') wrongItems.push(item);
   });
 
   // 상세 데이터 (문항별 입력값)
