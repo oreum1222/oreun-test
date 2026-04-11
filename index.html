@@ -124,6 +124,17 @@ body{background:var(--bg-deep);color:var(--text-primary);font-family:'Noto Sans 
 .submit-error .msg{font-size:14px;color:var(--wrong);font-weight:600;margin-bottom:6px}
 .submit-error .sub{font-size:12px;color:var(--text-muted);line-height:1.6}
 
+/* WRONG ITEMS LIST */
+.wrong-list{margin-top:16px;border-top:1px solid var(--border-row);padding-top:16px}
+.wrong-title{font-size:14px;font-weight:700;color:var(--wrong);margin-bottom:12px}
+.wrong-items{display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto}
+.wrong-item{background:rgba(239,68,68,.04);border:1px solid rgba(239,68,68,.12);border-radius:8px;padding:10px 12px}
+.wrong-item-header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.wrong-num{font-size:11px;font-weight:700;color:var(--wrong);background:rgba(239,68,68,.1);padding:2px 7px;border-radius:4px}
+.wrong-표기{font-family:'Noto Serif KR',serif;font-size:15px;font-weight:700;color:var(--text-primary)}
+.wrong-detail{font-size:12px;color:var(--text-secondary);line-height:1.7}
+.wrong-label{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-right:4px}
+
 .submit-name-row{display:flex;align-items:center;gap:10px;margin-bottom:16px}
 .submit-name-row label{font-size:13px;color:var(--text-secondary);font-weight:600;white-space:nowrap}
 .submit-name-input{flex:1;background:var(--bg-input);border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:9px 12px;color:var(--text-primary);font-size:14px;font-family:inherit;outline:none}
@@ -623,11 +634,19 @@ function submitResults(){
     문항별: results
   };
 
-  // OX 문자열 생성 (간결한 결과 데이터)
+  // OX 문자열 + 표기 포함 (시트에서 어떤 단어인지 알 수 있게)
   const marks = items.map(item=>{
     const r = getItemResult(item);
-    return r.status==='correct'?'O':r.status==='wrong'?'X':'-';
-  }).join('');
+    const mark = r.status==='correct'?'O':r.status==='wrong'?'X':'-';
+    return mark + ' ' + item.표기;
+  }).join(',');
+
+  // 틀린 문항 목록
+  const wrongItems = [];
+  items.forEach(item=>{
+    const r = getItemResult(item);
+    if(r.status === 'wrong') wrongItems.push(item);
+  });
 
   // 상세 데이터 (문항별 입력값)
   const details = items.map(item=>{
@@ -655,12 +674,38 @@ function submitResults(){
   script.src = url;
   script.onload = script.onerror = function(){
     document.body.removeChild(script);
+
+    // 틀린 문항 리스트 생성
+    let wrongHtml = '';
+    if(wrongItems.length > 0){
+      wrongHtml = `<div class="wrong-list">
+        <div class="wrong-title">❌ 틀린 문항 (${wrongItems.length}개)</div>
+        <div class="wrong-items">`;
+      wrongItems.forEach(item=>{
+        const r = getItemResult(item);
+        wrongHtml += `<div class="wrong-item">
+          <div class="wrong-item-header">
+            <span class="wrong-num">${item.n}번</span>
+            <span class="wrong-표기">${item.표기}</span>
+          </div>
+          <div class="wrong-detail">
+            <span class="wrong-label">정답 양상</span> ${item.표기} → ${item.양상.join(' → ')}
+          </div>
+          <div class="wrong-detail">
+            <span class="wrong-label">정답 규칙</span> ${item.규칙.join(', ')}
+          </div>
+        </div>`;
+      });
+      wrongHtml += `</div></div>`;
+    }
+
     document.getElementById('modalBody').innerHTML = `
       <div class="submit-success">
-        <div class="icon">✅</div>
+        <div class="icon">${wrongItems.length === 0 ? '🎉' : '✅'}</div>
         <div class="msg">${name}님의 ${submitRound+1}회 결과가 제출되었습니다!</div>
-        <div class="sub">${correctCount}/${items.length} 정답</div>
-      </div>`;
+        <div class="sub">${correctCount}/${items.length} 정답 (${payload.정답률})</div>
+      </div>
+      ${wrongHtml}`;
     btn.style.display = 'none';
   };
   document.body.appendChild(script);
